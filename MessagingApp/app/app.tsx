@@ -25,17 +25,19 @@ import EncryptedStorage from 'react-native-encrypted-storage';
 function App(): React.JSX.Element { 
   const theme = useColorScheme() === "dark" ? MD3DarkTheme : MD3LightTheme;
 
-  const [curUser, setCurUser] = useState();
+  const [curUser, setCurUser] = useState(null);
 
   useEffect(() => {
     EncryptedStorage.getItem("userSession")
       .then(res => {
-        res = JSON.parse(res);
         console.log("token: ", res);
-        setCurUser(res["token"]);
+        if (res !== undefined) {
+          res = JSON.parse(res);
+          setCurUser(res);
+        }
       })
       .catch(err => {
-        console.err("getToken:", err);
+        console.warn("getToken:", err);
       });
   }, []);
 

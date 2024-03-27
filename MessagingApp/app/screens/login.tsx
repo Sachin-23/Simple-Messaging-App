@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { usestate } from 'react';
 
 import { AuthContext } from "../utils/auth.tsx";
 
@@ -44,16 +44,18 @@ export default Login = ({ navigation }): React.JSX.Element => {
               token: res.data["token"],
               username: username})
           )
-          console.log("test", res.data);
-          setCurUser(res.data);
+          console.log("After Login: ", res.data);
+          setCurUser({token: res.data["token"], username: username});
         }
         catch (error) {
-          console.warn("Storage: ", error); 
-          setErrMsg("Error: App > Login > Login > storage");
+          setErrMsg("Error: App > Login > storage");
         }
       })()
     })
-    .catch(err => console.warn(err))
+    .catch(err => {
+      console.warn("Storage: ", err); 
+      setErrMsg("Error: App > Login > axios");
+    })
   }
 
   // refactor this

@@ -31,7 +31,7 @@ export default Navigator = (): React.JSX.Element => {
 
   return (
     <>
-      {curUser == null ? ( 
+      {curUser === null ? ( 
         <Stack.Navigator initialRouteName="Login">
           <Stack.Screen 
             name="Login" 

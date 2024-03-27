@@ -27,12 +27,14 @@ export default Navigator = (): React.JSX.Element => {
 
   return (
     <>
+      <Text variant="displaySmall">Profile</Text>
       <ErrDialog 
         title="Login error" 
         msg={errMsg}
         hideDialog={hideDialog}
       />
-      <Text>Profile</Text>
+      <Text variant="displayMedium">Username: {curUser["username"]}</Text>
+      <Text variant="displaySmall">Bio: {curUser["bio"]}</Text>
       <Button
         mode="elevated"
         onPress={logOut} 

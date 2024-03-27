@@ -55,7 +55,7 @@ export default Register = (): React.JSX.Element => {
               token: res.data["token"],
               username: username})
           )
-          setCurUser(res.data["token"]);
+          setCurUser(res.data);
         }
         catch (error) {
           setErrMsg("Register > Storage > ");
