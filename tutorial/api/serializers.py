@@ -29,15 +29,18 @@ class UserSerializer(serializers.ModelSerializer):
 
         return user
 
-
-class ChatsSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Chats
-        fields = "__all__"
-
 class MsgSerializer(serializers.ModelSerializer):
+
     class Meta:
         model = Message
-        fields = "__all__"
+        fields = ("id", "sender", "receiver", "content", "image", "time")
+
+
+class ChatsSerializer(serializers.ModelSerializer):
+    recentMsg = MsgSerializer()
+
+    class Meta:
+        model = Chats
+        fields = ("id", "sender", "receiver", "recentMsg", "time")
 
 

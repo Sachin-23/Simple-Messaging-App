@@ -20,14 +20,16 @@ from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from rest_framework.authtoken.views import obtain_auth_token
 
-from api.views import RegisterUserView, SearchUserView, ChatsView, ChatView
+from api.views import LoginUserView, RegisterUserView, SearchUserView, ChatsView, ChatView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path("api/register/", RegisterUserView.as_view()),
     # for searching users
     path("api/users/", SearchUserView.as_view()),
+    # Note: extra 's'
     path("api/chats/", ChatsView.as_view()),
     path("api/chat/", ChatView.as_view()),
-    path("api/login/", obtain_auth_token),
+    path("api/login/", LoginUserView.as_view()),
 ]
+

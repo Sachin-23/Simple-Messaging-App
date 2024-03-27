@@ -12,15 +12,15 @@ class User(AbstractUser):
 class Message(models.Model):
     content = models.TextField(blank=True, max_length=256)
     image = models.ImageField(blank=True)
-    sender = models.ForeignKey(User, on_delete=models.DO_NOTHING, related_name="sender")
-    receiver = models.ForeignKey(User, on_delete=models.DO_NOTHING, related_name="receiver")
+    sender = models.ForeignKey(User,to_field="username", on_delete=models.DO_NOTHING, related_name="sender")
+    receiver = models.ForeignKey(User, to_field="username", on_delete=models.DO_NOTHING, related_name="receiver")
     time = models.DateTimeField(auto_now_add=True)
     received = models.BooleanField(default=False)
 
 
 class Chats(models.Model):
-    sender = models.ForeignKey(User, on_delete=models.DO_NOTHING, related_name="msgSender")
-    receiver = models.ForeignKey(User, on_delete=models.DO_NOTHING, related_name="msgReceiver")
+    sender = models.ForeignKey(User, to_field="username", on_delete=models.DO_NOTHING, related_name="msgSender")
+    receiver = models.ForeignKey(User, to_field="username", on_delete=models.DO_NOTHING, related_name="msgReceiver")
     recentMsg = models.ForeignKey(Message, on_delete=models.CASCADE, related_name="recentMsg")
-    time = models.DateTimeField(auto_now_add=True)
+    time = models.DateTimeField(auto_now=True)
 

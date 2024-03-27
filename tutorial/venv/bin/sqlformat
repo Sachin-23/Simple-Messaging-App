@@ -1,4 +1,4 @@
-#!/Users/s4ch1n/Study/test/tutorial/venv/bin/python3.12
+#!/Users/s4ch1n/Study/Simple-Messaging-App/tutorial/venv/bin/python3.12
 # -*- coding: utf-8 -*-
 import re
 import sys

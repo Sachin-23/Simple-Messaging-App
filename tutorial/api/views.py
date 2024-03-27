@@ -9,7 +9,27 @@ from rest_framework.authentication import TokenAuthentication
 from django.contrib.auth import authenticate
 from rest_framework.authtoken.models import Token
 from rest_framework import filters
+from rest_framework.authtoken.serializers import AuthTokenSerializer
+from rest_framework.authtoken.views import ObtainAuthToken
 
+from django.db.models import Q
+
+import time
+
+class LoginUserView(ObtainAuthToken):
+    throttle_classes = ()
+    permission_classes = ()
+    #parser_classes = (parsers.FormParser, parsers.MultiPartParser, parsers.JSONParser,) 
+    #renderer_classes = (renderers.JSONRenderer,)
+    serializer_class = AuthTokenSerializer
+
+    def post(self, request, *args, **kwargs):
+        res = super().post(request, *args, **kwargs)
+        token = res.data["token"]
+        username=request.data["username"]
+        password=request.data["password"]
+        user = authenticate(username=username, password=password)
+        return Response({"username": user.username, "token": token, "bio": user.bio})
 
 class RegisterUserView(generics.CreateAPIView):
     queryset = User.objects.all()
@@ -22,9 +42,8 @@ class RegisterUserView(generics.CreateAPIView):
         password = request.data["password"]
         # Authenticate ?
         user = authenticate(username=username, password=password)
-        print(dir(user))
         token = Token.objects.create(user=user)
-        return Response({"username": username, "token": token.key})
+        return Response({"username": username, "token": token.key, "bio": user.bio})
 
 class SearchUserView(generics.ListAPIView):
     queryset = User.objects.all()
@@ -35,19 +54,22 @@ class SearchUserView(generics.ListAPIView):
 
 
 class ChatsView(generics.ListAPIView):
-    queryset = Chats.objects.all()
     serializer_class = ChatsSerializer 
-    filter_backends = [filters.SearchFilter]
-    search_fields = ["=msgSender", "=msgReceiver"]
     permission_classes = [AllowAny]
+    ordering = ['time']
 
+    def get_queryset(self):
+        user = self.request.user
+        print(user)
+        return Chats.objects.filter(receiver=user)
 
 class ChatView(generics.ListCreateAPIView):
     queryset = Message.objects.all()
     serializer_class = MsgSerializer 
     filter_backends = [filters.SearchFilter]
-    search_fields = ["=msgSender", "=msgReceiver"]
-    permission_classes = [AllowAny]
+    search_fields = ["=receiver__username"]
+    authentication_classes = [TokenAuthentication]
+    ordering = ['-time']
 
     def create(self, request, *args, **kwargs):
         '''
@@ -55,8 +77,23 @@ class ChatView(generics.ListCreateAPIView):
         and if new message arrives then asynchronously check if the users exist in the dict send the message
 
         Initialize the web socket send the pending message to the user, then add it to the dictionary 
-
         '''
-        super().create(request, *args, **kwargs)
-        return Response({"token": ""})
+        sender = request.user
+        receiver = User.objects.get(username=request.data["receiver"])
+        content = request.data["content"]
+        msg = Message(sender=sender, receiver=receiver, content=content)
+        msg.save()
+        rmsg, created = Chats.objects.update_or_create(sender=sender, receiver=receiver, defaults={"recentMsg": msg})
+        if created:
+            print("Chats created.")
+        else:
+            print("Updated.")
+        return Response({"msg": "success"})
+
+    def get_queryset(self):
+        sender = self.request.user
+        receiver = User.objects.get(username=self.request.query_params["receiver"])
+        return Message.objects.filter((Q(sender=sender) | Q(receiver=sender)) & (Q(sender=receiver) | Q(receiver=receiver)))
+        #return Message.objects.filter(Q(sender=sender) | Q(receiver=sender))
+
 
