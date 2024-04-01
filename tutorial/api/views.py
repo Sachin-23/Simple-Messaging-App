@@ -16,6 +16,8 @@ from django.db.models import Q
 
 import time
 
+from api.consumer import users
+
 class LoginUserView(ObtainAuthToken):
     throttle_classes = ()
     permission_classes = ()
@@ -61,7 +63,24 @@ class ChatsView(generics.ListAPIView):
     def get_queryset(self):
         user = self.request.user
         print(user)
-        return Chats.objects.filter(receiver=user)
+        chats = Chats.objects.filter(Q(receiver=user) | Q(sender=user))
+        print(chats)
+        return chats
+
+    def list(self, request):
+        queryset = self.get_queryset()
+        serializer = ChatsSerializer(queryset, many=True)
+        print(serializer.data)
+        chats = dict()
+        # Fix this -- come up with a better solution
+        for i in serializer.data:
+            key = tuple({i["receiver"], i["sender"]})
+            if i["receiver"] == self.request.user.username:
+                i["receiver"] = i["sender"]
+            chats[key] = i
+        data = [chats[x] for x in chats]
+        return Response(data)
+
 
 class ChatView(generics.ListCreateAPIView):
     queryset = Message.objects.all()
@@ -83,6 +102,12 @@ class ChatView(generics.ListCreateAPIView):
         content = request.data["content"]
         msg = Message(sender=sender, receiver=receiver, content=content)
         msg.save()
+
+        print(users)
+
+        if receiver.username in users.keys():
+            print(users[receiver.username].sendMsg(sender=sender.username, msg="reload"))
+
         rmsg, created = Chats.objects.update_or_create(sender=sender, receiver=receiver, defaults={"recentMsg": msg})
         if created:
             print("Chats created.")

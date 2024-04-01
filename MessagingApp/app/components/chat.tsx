@@ -1,13 +1,7 @@
 import React, { useState, useEffect } from 'react';
 
 import { FlatList } from 'react-native';
-import { Text, Card, Button } from 'react-native-paper';
-
-import { authcontext } from "../utils/auth.tsx";
-
-import { text
-        , textinput 
-        , button } from "react-native-paper";
+import { Text, Card, Button, TextInput, Icon, HelperText } from 'react-native-paper';
 
 import axios from 'axios';
 
@@ -19,16 +13,23 @@ import ErrDialog from "../components/errorDialog.tsx"
 
 import EncryptedStorage from 'react-native-encrypted-storage';
 
-/*
-*/
-
 const Msg = ({sender, data}) => {
+
+  function getTime(time) {
+    const d = time.getDate()
+    const m = time.getMonth()
+    const y = time.getFullYear()
+    const h = time.getHours()
+    const min = time.getMinutes()
+
+    return `${d}-${m}-${y} ${h < 10 ? "0" + h : h}:${min < 10 ? "0" + min : min}`
+  }
 
   return (
     <Card>
       <Card.Content>
         <Text variant="titleMedium">{data.sender == sender ? "You" : data.sender}: {data.content}</Text>
-        <Text>{data.time.getDate()}-{data.time.getMonth()}-{data.time.getFullYear()} {data.time.getHours()}:{data.time.getMinutes()}</Text>
+        <Text>{getTime(data.time)}</Text>
       </Card.Content>
     </Card>
   );
@@ -38,38 +39,97 @@ export default function ChatBox({navigation, route}) {
 
   const [msgs, setMsgs] = useState(null);
 
-  const { curUser } = React.useContext(AuthContext);
+  const [msg, setMsg] = useState('');
+
+  const [render, setRender] = useState(true);
+
+  const { curUser, url } = React.useContext(AuthContext);
 
   const config = {
     headers: { Authorization: `Token ${curUser["token"]}` }
   };
- 
-  useEffect(() => {
-    console.log("Msg: ", msgs)
-    if (msgs === null) {
+
+  function loadMsgs() {
+    if (render === true) {
+      setRender(false);
       axios.get(
-        "http://10.0.2.2:8000/api/chat/?receiver=" + route.params["receiver"],
+        `${url}/api/chat/?receiver=` + route.params["receiver"],
         config,
       )
       .then(res => { 
-        const data = res.data.map(chat => { return {  id: chat.id, sender: chat.sender, receiver: chat.receiver, content: chat.content, time: new Date(chat.time) } }).sort(chat => chat.time).reverse()
-        console.log("Setting up messages:", data);
+        const data = res.data.map(chat => { return {  id: chat.id, sender: chat.sender, receiver: chat.receiver, content: chat.content, time: new Date(chat.time) } }).sort((a, b) => b.time - a.time)
+        //console.log("Setting up messages:", data);
         setMsgs(data);
       })
       .catch(err => {
-        console.log("Chat > useEffect", err);
+        setErrMsg("Chat > useEffect", err);
       })
     }
-  })
+  }
+ 
+  useEffect(() => {
+    loadMsgs();
+    console.log("Msg: ", msgs)
+
+  }, [render])
+
+  function sendMsg() {
+      if (msg.length < 1) {
+      setHelperMsg("Cannot send empty message.");
+      return;
+    }
+    axios.post(
+      `${url}/api/chat/`, {
+        receiver: route.params["receiver"],
+        content: msg 
+      },
+      config,
+    )
+    .then(res => {
+      console.log(res.data["msg"]); 
+      if (res.data["msg"] == "success") {
+        setRender(true);
+        setMsg("");
+      }
+    })
+    .catch(err => {
+      setErrMsg("Network Error");
+      console.warn(err);
+    })
+  }
+
+  // refactor this
+  const [errMsg, setErrMsg] = React.useState(null);
+  const hideDialog = () => setErrMsg(null);
+
+  const [helperMsg, setHelperMsg] = React.useState("");
 
   return (
     <>
-      <Text>{route.params["reciever"]}</Text>
+      <ErrDialog 
+        title="Login error" 
+        msg={errMsg}
+        hideDialog={hideDialog}
+      />
       <FlatList
+        inverted={true}
         data={msgs}
         renderItem={({item}) => <Msg sender={curUser["username"]} data={item} />}
         keyExtractor={item => item.id}
       />
+      {helperMsg && 
+       <HelperText visible={helperMsg !== ""}>
+           {helperMsg}
+       </HelperText>
+      }
+      <TextInput
+        label=""
+        placeholder="Enter your message"
+        value={msg}
+        onChangeText={text => setMsg(text)}
+        right={<TextInput.Icon icon="send" onPress={() => sendMsg()}/>}
+      />
+      <Button onPress={() => loadMsgs()}></Button>
     </>
   );
 }

@@ -56,7 +56,7 @@ const MsgDialog = ({msg, setMsg, receiver, visible, hideModal, sendMsg, helperMs
 
 export default Search = (): React.JSX.Element => {
 
-  const { curUser } = React.useContext(AuthContext);
+  const { curUser, url } = React.useContext(AuthContext);
 
   const [searchQuery, setSearchQuery] = React.useState('');
 
@@ -94,7 +94,7 @@ export default Search = (): React.JSX.Element => {
       return;
     }
     axios.get(
-      "http://10.0.2.2:8000/api/users/?search=" + searchQuery,
+      `${url}/api/users/?search=` + searchQuery,
       config
     )
     .then(res => {
@@ -113,8 +113,7 @@ export default Search = (): React.JSX.Element => {
       return;
     }
     setHelperMsg("Sending...");
-    axios.post(
-      "http://10.0.2.2:8000/api/chat/", {
+    axios.post(`${url}/api/chat/`, {
         receiver: receiver,
         content: msg 
       },
@@ -151,7 +150,6 @@ export default Search = (): React.JSX.Element => {
 
   return (
     <>
-      <Text variant="displaySmall">Search</Text>
       <ErrDialog 
         title="Login error" 
         msg={errMsg}

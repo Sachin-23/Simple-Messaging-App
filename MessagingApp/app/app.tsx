@@ -27,6 +27,8 @@ function App(): React.JSX.Element {
 
   const [curUser, setCurUser] = useState(null);
 
+  const [url, setUrl] = React.useState("");
+
   useEffect(() => {
     EncryptedStorage.getItem("userSession")
       .then(res => {
@@ -39,11 +41,24 @@ function App(): React.JSX.Element {
       .catch(err => {
         console.warn("getToken:", err);
       });
+    EncryptedStorage.getItem("url")
+      .then(res => {
+        if (res !== undefined) {
+          console.log(JSON.parse(res)["url"]);
+          setUrl(JSON.parse(res)["url"]);
+        }
+        else {
+          setUrl("10.0.0.2:8000");
+        }
+      })
+      .catch(err => {
+        console.warn("Get Url:", err);
+      });
   }, []);
 
   return (
     <SafeAreaProvider>
-      <AuthContext.Provider value={{ curUser, setCurUser }}>
+      <AuthContext.Provider value={{ curUser, setCurUser, url, setUrl }}>
         <PaperProvider theme={theme}>
           <NavigationContainer theme={theme}>
             <Navigator />

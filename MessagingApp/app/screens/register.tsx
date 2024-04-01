@@ -17,7 +17,7 @@ import EncryptedStorage from 'react-native-encrypted-storage';
 
 export default Register = (): React.JSX.Element => {
 
-  const { curUser, setCurUser } = React.useContext(AuthContext);
+  const { curUser, setCurUser, url } = React.useContext(AuthContext);
 
   const [username, setUsername] = React.useState("");
   const [password, setPassword] = React.useState("");
@@ -39,7 +39,7 @@ export default Register = (): React.JSX.Element => {
       setErrMsg("Passwords do not match.");
       return;
     } 
-    axios.post("http://10.0.2.2:8000/api/register/", {
+    axios.post(`${url}/api/register/`, {
         username: username,
         password: password,
         bio: bio, 
@@ -51,7 +51,7 @@ export default Register = (): React.JSX.Element => {
           await EncryptedStorage.setItem(
             "userSession", 
             JSON.stringify({
-            /* get bio also */
+              bio: res.data["bio"],
               token: res.data["token"],
               username: username})
           )
@@ -86,11 +86,13 @@ export default Register = (): React.JSX.Element => {
       <TextInput
         label="Password"
         value={password}
+        secureTextEntry={true}
         onChangeText={text => setPassword(text)}
       />
       <TextInput
         label="Confirm Password"
         value={password2}
+        secureTextEntry={true}
         onChangeText={text => setPassword2(text)}
       />
       <Button

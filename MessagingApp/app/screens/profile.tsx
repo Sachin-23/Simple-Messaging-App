@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Text, Button } from 'react-native-paper';
+import { Text, Button, TextInput } from 'react-native-paper';
 
 import { AuthContext } from "../utils/auth.tsx";
 
@@ -14,6 +14,8 @@ export default Navigator = (): React.JSX.Element => {
   const [errMsg, setErrMsg] = React.useState(null);
   const hideDialog = () => setErrMsg(null);
 
+  const [url, setUrl] = React.useState("");
+
   function logOut() {
     try {
         (async () => {
@@ -25,15 +27,18 @@ export default Navigator = (): React.JSX.Element => {
     }
   }
 
+  function saveUrl() {
+    console.log(url);
+  }
+
   return (
     <>
-      <Text variant="displaySmall">Profile</Text>
       <ErrDialog 
         title="Login error" 
         msg={errMsg}
         hideDialog={hideDialog}
       />
-      <Text variant="displayMedium">Username: {curUser["username"]}</Text>
+      <Text variant="displaySmall">Username: {curUser["username"]}</Text>
       <Text variant="displaySmall">Bio: {curUser["bio"]}</Text>
       <Button
         mode="elevated"
